@@ -10,6 +10,8 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mysololife.R
+import com.example.mysololife.utils.FBAuth
+import com.example.mysololife.utils.FBRef
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -21,12 +23,18 @@ class ContentsListActivity : AppCompatActivity() {
 
     lateinit var myRef : DatabaseReference
 
+    val bookmarkIdList = mutableListOf<String>()
+
+    lateinit var rvAdapter : ContentsRVAdapter
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_contents_list)
 
         val items = ArrayList<ContentModel>()
-        val rvAdapter = ContentsRVAdapter(baseContext, items)
+        val itemKeyList = ArrayList<String>()
+
+        rvAdapter = ContentsRVAdapter(baseContext, items, itemKeyList, bookmarkIdList)
 
         // Write a message to the database
         val database = Firebase.database
@@ -43,8 +51,10 @@ class ContentsListActivity : AppCompatActivity() {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 for (dataModel in dataSnapshot.children) {
                     Log.d("ContentsListActivity", dataModel.toString())
+                    Log.d("ContentsListActivity", dataModel.key.toString())
                     val item = dataModel.getValue(ContentModel::class.java)
                     items.add(item!!)
+                    itemKeyList.add(dataModel.key.toString())
                 }
                 rvAdapter.notifyDataSetChanged()
                 Log.d("ContentsListActivity", items.toString())
@@ -56,6 +66,42 @@ class ContentsListActivity : AppCompatActivity() {
             }
         }
         myRef.addValueEventListener(postListener)
+
+        val rv : RecyclerView = findViewById(R.id.rv)
+
+        rv.adapter = rvAdapter
+
+        rv.layoutManager = GridLayoutManager(this, 2)
+
+        getBookmarkData()
+    }
+
+    private fun getBookmarkData(){
+
+        val postListener = object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+
+                bookmarkIdList.clear()
+
+                for (dataModel in dataSnapshot.children) {
+                    bookmarkIdList.add(dataModel.key.toString())
+                }
+                Log.d("Bookmark : ", bookmarkIdList.toString())
+                rvAdapter.notifyDataSetChanged()
+
+            }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+                // Getting Post failed, log a message
+                Log.w("ContentListActivity", "loadPost:onCancelled", databaseError.toException())
+            }
+        }
+        FBRef.bookmarkRef.child(FBAuth.getUid()).addValueEventListener(postListener)
+
+
+
+    }
+}
 
 //        val myRef = database.getReference("contents")
 //
@@ -69,21 +115,15 @@ class ContentsListActivity : AppCompatActivity() {
 //            ContentModel("title4", "https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FcOYyBM%2Fbtq67Or43WW%2F17lZ3tKajnNwGPSCLtfnE1%2Fimg.png", "https://philosopher-chan.tistory.com/1238?category=941578")
 //        )
 
-        val rv : RecyclerView = findViewById(R.id.rv)
-
-        rv.adapter = rvAdapter
-
-        rv.layoutManager = GridLayoutManager(this, 2)
-
-        rvAdapter.itemClick = object : ContentsRVAdapter.ItemClick {
-            override fun onClick(view: View, position: Int) {
-                Toast.makeText(baseContext, items[position].title, Toast.LENGTH_SHORT).show()
-
-                val intent = Intent(this@ContentsListActivity, ContentShowActivity::class.java)
-                intent.putExtra("url", items[position].webUrl)
-                startActivity(intent)
-            }
-        }
+//        rvAdapter.itemClick = object : ContentsRVAdapter.ItemClick {
+//            override fun onClick(view: View, position: Int) {
+//                Toast.makeText(baseContext, items[position].title, Toast.LENGTH_SHORT).show()
+//
+//                val intent = Intent(this@ContentsListActivity, ContentShowActivity::class.java)
+//                intent.putExtra("url", items[position].webUrl)
+//                startActivity(intent)
+//            }
+//        }
 
 //        val myRef2 = database.getReference("contents2")
 //        myRef2.push().setValue(
@@ -98,8 +138,6 @@ class ContentsListActivity : AppCompatActivity() {
 //        myRef2.push().setValue(
 //            ContentModel("title8", "https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FmBh5u%2Fbtq651yYxop%2FX3idRXeJ0VQEoT1d6Hln30%2Fimg.png", "https://philosopher-chan.tistory.com/1242?category=941578")
 //        )
-    }
-}
 
 //        items.add(ContentModel("title1", "https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FblYPPY%2Fbtq66v0S4wu%2FRmuhpkXUO4FOcrlOmVG4G1%2Fimg.png", "https://philosopher-chan.tistory.com/1235?category=941578"))
 //        items.add(ContentModel("title2", "https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FznKK4%2Fbtq665AUWem%2FRUawPn5Wwb4cQ8BetEwN40%2Fimg.png", "https://philosopher-chan.tistory.com/1236?category=941578"))

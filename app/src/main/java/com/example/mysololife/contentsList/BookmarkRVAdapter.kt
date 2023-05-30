@@ -15,25 +15,25 @@ import com.example.mysololife.R
 import com.example.mysololife.utils.FBAuth
 import com.example.mysololife.utils.FBRef
 
-class ContentsRVAdapter(
+class BookmarkRVAdapter(
     val context : Context,
     val items : ArrayList<ContentModel>,
     val keyList : ArrayList<String>,
     val bookmarkIdList : MutableList<String>)
-    : RecyclerView.Adapter<ContentsRVAdapter.ViewHolder>() {
+    : RecyclerView.Adapter<BookmarkRVAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
-    ): ContentsRVAdapter.ViewHolder {
+    ): BookmarkRVAdapter.ViewHolder {
         val v = LayoutInflater.from(parent.context).inflate(R.layout.contents_rv_item, parent, false)
 
-        Log.d("ContentsRVAdapter", keyList.toString())
-        Log.d("ContentsRVAdapter", bookmarkIdList.toString())
+        Log.d("BookmarkRVAdapter", keyList.toString())
+        Log.d("BookmarkRVAdapter", bookmarkIdList.toString())
         return ViewHolder(v)
     }
 
-    override fun onBindViewHolder(holder: ContentsRVAdapter.ViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: BookmarkRVAdapter.ViewHolder, position: Int) {
         holder.bindItems(items[position], keyList[position])
     }
 
@@ -59,26 +59,6 @@ class ContentsRVAdapter(
                 bookmarkArea.setImageResource(R.drawable.bookmark_color)
             } else {
                 bookmarkArea.setImageResource(R.drawable.bookmark_white)
-            }
-
-            bookmarkArea.setOnClickListener {
-                Log.d("ContentsRVAdapter", FBAuth.getUid())
-                Toast.makeText(context, key, Toast.LENGTH_LONG).show()
-
-                if (bookmarkIdList.contains(key)) {
-                    // 북마크가 있을 떄
-
-                    FBRef.bookmarkRef
-                        .child(FBAuth.getUid())
-                        .child(key)
-                        .removeValue()
-                } else {
-                    // 북마크가 없을 때
-                    FBRef.bookmarkRef
-                        .child(FBAuth.getUid())
-                        .child(key)
-                        .setValue(BookmarkModel(true))
-                }
             }
 
             contentTitle.text = item.title
